@@ -2,7 +2,7 @@ name: InteractiveChat-Ascension
 author: paulstraw
 authors: [LOOHP]
 version: ${project.version}
-main: com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon
+main: com.paulstraw.icascension.InteractiveChatDiscordSrvAddon
 api-version: 1.13
 folia-supported: false
 description: Unofficial fork of LOOHP's InteractiveChat DiscordSRV Addon for DiscordSRV Ascension. Shows InteractiveChat items, inventories and ender chests in Discord.

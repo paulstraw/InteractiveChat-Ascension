@@ -92,7 +92,7 @@ public class ResourceDownloadManager {
         if (data == null || assetIndex == null) {
             data = HTTPRequestUtils.getJSONResponse(ASSETS_DATA_URL.replace("%s", minecraftVersion));
             if (data == null) {
-                InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to fetch assets from \"api.loohpjames.com\". This could be an internet issue or \"api.loohpjames.com\" is down. If the plugin functions correctly after this, this error can be ignored.");
+                InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.RED + "[ICAscension] Unable to fetch assets from \"api.loohpjames.com\". This could be an internet issue or \"api.loohpjames.com\" is down. If the plugin functions correctly after this, this error can be ignored.");
                 return;
             }
             JSONObject client = (JSONObject) data.get("client-entries");

@@ -20,6 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon;
 
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.google.gson.Gson;
 import com.loohp.interactivechat.libs.com.google.gson.GsonBuilder;
@@ -102,37 +104,37 @@ public class AssetsDownloader {
 
             if (force || !hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
                 if (clean) {
-                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Cleaning old default resources!", senders);
+                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICAscension] Cleaning old default resources!", senders);
                     FileUtils.removeFolderRecursively(defaultAssetsFolder);
                     defaultAssetsFolder.mkdirs();
                 }
                 if (force) {
-                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
+                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICAscension] Forcibly re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
                 } else if (!hash.equals(oldHash)) {
-                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
+                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICAscension] Hash changed! Re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
                 } else {
-                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Plugin version changed! Re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
+                    InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICAscension] Plugin version changed! Re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
                 }
 
                 downloadManager.downloadResources((type, fileName, percentage) -> {
                     switch (type) {
                         case CLIENT_DOWNLOAD:
                             if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo && percentage == 0.0) {
-                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading client jar");
+                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICAscension] Downloading client jar");
                             }
                             break;
                         case EXTRACT:
                             if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
-                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Extracting " + fileName + " (" + FORMAT.format(percentage) + "%)");
+                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICAscension] Extracting " + fileName + " (" + FORMAT.format(percentage) + "%)");
                             }
                             break;
                         case DOWNLOAD:
                             if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
-                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading " + fileName + " (" + FORMAT.format(percentage) + "%)");
+                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICAscension] Downloading " + fileName + " (" + FORMAT.format(percentage) + "%)");
                             }
                             break;
                         case DONE:
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Done!");
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] Done!");
                             break;
                     }
                 });
@@ -157,7 +159,11 @@ public class AssetsDownloader {
                 e.printStackTrace();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            // Reported once, with advice, by the caller when resources end up unusable
+            Debug.debug("Unable to download default resources: " + e);
+            if (InteractiveChatDiscordSrvAddon.debug) {
+                e.printStackTrace();
+            }
         } finally {
             LOCK.unlock();
         }
@@ -263,31 +269,34 @@ public class AssetsDownloader {
                 if (!hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
                     downloadManager.downloadLibraries((result, jarName, percentage) -> {
                         if (result) {
-                            Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded library \"" + jarName + "\"");
+                            Bukkit.getConsoleSender().sendMessage("[ICAscension] Downloaded library \"" + jarName + "\"");
                         } else {
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to download library \"" + jarName + "\"");
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] Unable to download library \"" + jarName + "\"");
                         }
                     });
                 }
             } catch (Throwable e) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Error while downloading libraries");
-                e.printStackTrace();
+                // Reported once, with advice, when resources fail to load without these libraries
+                Debug.debug("Unable to download libraries: " + e);
+                if (InteractiveChatDiscordSrvAddon.debug) {
+                    e.printStackTrace();
+                }
             }
 
             LibraryLoader.loadLibraries(libsFolder, (file, e) -> {
                 String jarName = file.getName();
                 if (e == null) {
-                    Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Remapped library \"" + jarName + "\"");
+                    Bukkit.getConsoleSender().sendMessage("[ICAscension] Remapped library \"" + jarName + "\"");
                 } else {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to remap library \"" + jarName + "\"");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] Unable to remap library \"" + jarName + "\"");
                     e.printStackTrace();
                 }
             }, (file, e) -> {
                 String jarName = file.getName();
                 if (e == null) {
-                    Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Loaded library \"" + jarName + "\"");
+                    Bukkit.getConsoleSender().sendMessage("[ICAscension] Loaded library \"" + jarName + "\"");
                 } else {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load library \"" + jarName + "\"");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] Unable to load library \"" + jarName + "\"");
                     e.printStackTrace();
                 }
             });

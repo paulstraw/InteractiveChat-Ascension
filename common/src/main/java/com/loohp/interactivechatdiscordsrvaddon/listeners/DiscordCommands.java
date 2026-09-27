@@ -611,6 +611,17 @@ public class DiscordCommands implements Listener {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] Unable to register Discord command /" + command.getName() + ": " + result);
             }
         }
+        pushCommandsIfConnected();
+    }
+
+    /**
+     * DiscordSRV only sends its command registry to Discord when it connects or reloads, and has no API to ask
+     * for it. If it connected before this plugin enabled (or on our config reload), ask through its reload command.
+     */
+    private static void pushCommandsIfConnected() {
+        if (DiscordSRV.isAvailable() && DiscordSRV.get().isReady() && InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
+            Scheduler.runTask(InteractiveChatDiscordSrvAddon.plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "discordsrv reload discord_commands"));
+        }
     }
 
     public synchronized void unregister() {

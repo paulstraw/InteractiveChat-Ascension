@@ -150,7 +150,8 @@ public class OutboundToDiscordEvents implements Listener {
             }
         }
         message = message.replaceText(TextReplacementConfig.builder().match(ANY_DATA_PATTERN).replacement("").build());
-        if (!dataList.isEmpty()) {
+        // Without loaded resources there's nothing to render; the text replacements above still apply
+        if (!dataList.isEmpty() && InteractiveChatDiscordSrvAddon.isReady) {
             dataList.sort(DISPLAY_DATA_COMPARATOR);
             PENDING.put(event, new PendingMessage(icSender, dataList));
         }
@@ -419,7 +420,7 @@ public class OutboundToDiscordEvents implements Listener {
                     if (!InteractiveChat.itemAirAllow && isAir) {
                         return null;
                     }
-                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.getTranslateFunction()));
                     itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
 
                     int amount = item.getAmount();

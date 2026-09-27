@@ -1,0 +1,79 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      ascension:
+        description: DiscordSRV Ascension commit or branch to build against (default ASCENSION_COMMIT)
+        required: false
+  schedule:
+    # Weekly, against Ascension's main branch, to catch API changes early
+    - cron: '0 6 * * 1'
+
+env:
+  MINECRAFT_VERSION: '26.2'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: maven-
+
+      - name: Cache CraftBukkit
+        id: craftbukkit
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/bukkit/craftbukkit
+          key: craftbukkit-${{ env.MINECRAFT_VERSION }}
+
+      - name: Build CraftBukkit
+        if: steps.craftbukkit.outputs.cache-hit != 'true'
+        run: scripts/install-craftbukkit.sh "$MINECRAFT_VERSION"
+
+      - name: Build DiscordSRV Ascension API
+        env:
+          ASCENSION_COMMIT: ${{ github.event_name == 'schedule' && 'main' || inputs.ascension }}
+        run: |
+          [ -n "$ASCENSION_COMMIT" ] || unset ASCENSION_COMMIT
+          scripts/install-ascension-api.sh
+
+      - name: Set release version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: mvn -B -q versions:set -DnewVersion="${GITHUB_REF_NAME#v}" -DgenerateBackupPoms=false
+
+      - name: Build
+        run: mvn -B package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: InteractiveChat-Ascension
+          path: |
+            common/target/InteractiveChat-Ascension-*.jar
+            !common/target/original-*.jar
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" common/target/InteractiveChat-Ascension-"${GITHUB_REF_NAME#v}".jar \
+            --title "$GITHUB_REF_NAME" --generate-notes \
+            --notes "Built against DiscordSRV Ascension $(cat ASCENSION_COMMIT) and Paper $MINECRAFT_VERSION."

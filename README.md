@@ -1,52 +1,49 @@
-[![Build Status](https://ci.loohpjames.com/job/InteractiveChat-DiscordSRV-Addon/badge/icon)](https://ci.loohpjames.com/job/InteractiveChat-DiscordSRV-Addon/)
-# InteractiveChat DiscordSRV Addon
+# InteractiveChat-Ascension
 
-https://www.spigotmc.org/resources/83917/<br>
-https://modrinth.com/plugin/interactivechat-discordsrv-addon/<br>
-https://hangar.papermc.io/LOOHP/InteractiveChatDiscordSRV
+**An unofficial fork of [LOOHP's InteractiveChat DiscordSRV Addon](https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon) for [DiscordSRV Ascension](https://github.com/DiscordSRV/Ascension).**
+It isn't made or supported by LOOHP or the DiscordSRV team. Please report problems here, not to them.
 
-Have InteractiveChat Placeholders translated on DiscordSRV discord messages. As well as sharing items, inventories to discord and sharing images and gifs to the game from discord!
+When players use [InteractiveChat](https://github.com/LOOHP/InteractiveChat) placeholders such as `[item]`, `[inv]` and `[ender]` in chat, the message DiscordSRV Ascension relays to Discord shows:
 
-More information (screenshots, commands, permissions) about the plugin can be found on the Spigot page linked above.
+- the placeholder as readable text (the item's name, "Steve's Inventory", and so on) instead of InteractiveChat's internal markers, and
+- rendered images: the item's icon, its full in-game tooltip, and inventory and ender chest grids, with a menu to inspect any slot.
 
-## Built against Spigot
-Built against [Spigot's API](https://www.spigotmc.org/wiki/buildtools/) (required mc versions are listed on the spigot page above).
-Plugins built against Spigot usually also work with [Paper](https://papermc.io/).
+It also adds Discord slash commands: `/item`, `/inv`, `/ender` (and `…asuser` variants), `/playerinfo`, `/playerlist` and `/resourcepack`.
 
-## Development Builds
+Nearly all of the rendering is LOOHP's work. This fork replaces the part that talked to legacy DiscordSRV with DiscordSRV Ascension's API.
 
-- [Jenkins](https://ci.loohpjames.com/job/InteractiveChat-DiscordSRV-Addon/)
+## Requirements
 
-## Maven
-```html
-<repository>
-  <id>loohp-repo</id>
-  <url>https://repo.loohpjames.com/repository</url>
-</repository>
+- Paper 26.2 (the only version this fork is built and tested for)
+- [InteractiveChat](https://modrinth.com/plugin/interactivechat) 2026.1.1 or newer, with its dependencies
+- [DiscordSRV Ascension](https://github.com/DiscordSRV/Ascension) (tested against commit in [`ASCENSION_COMMIT`](ASCENSION_COMMIT)). Ascension has no stable API yet, so a newer Ascension build can break this plugin.
+
+On first start the plugin downloads Minecraft's assets and a few libraries from LOOHP's asset API (`api.loohpjames.com`) and `resources.download.minecraft.net`, and caches them in `plugins/InteractiveChat-Ascension`. If they can't be downloaded, chat still reaches Discord as text, without images, and the console says so once.
+
+## Differences from the upstream addon
+
+- Works with DiscordSRV Ascension only, not legacy DiscordSRV.
+- Images are attached to the message DiscordSRV sends, rather than sent and then edited in, and the webhook username and avatar DiscordSRV chose are kept.
+- Slash commands are registered through DiscordSRV's own command registry, so its commands (such as `/link`) keep working. They work in any channel; use Discord's *Server Settings → Integrations* to limit where.
+- Not included: Discord-to-game attachment previews (ImageFrame), death message and advancement images, translating `@player` into Discord mentions (Ascension handles mentions itself), bStats, and the update checker.
+- The command is `/ica` (`/interactivechatascension`), permissions start with `interactivechatascension.`, and the config lives in `plugins/InteractiveChat-Ascension`.
+
+## Building
+
+You need JDK 25, Maven and git. Two dependencies aren't published anywhere, so scripts build them into your local Maven repository first:
+
+```sh
+scripts/install-craftbukkit.sh 26.2     # Spigot BuildTools, a couple of minutes
+scripts/install-ascension-api.sh        # DiscordSRV Ascension's API, at the commit in ASCENSION_COMMIT
+mvn package
 ```
-```html
-<dependency>
-  <groupId>com.loohp</groupId>
-  <artifactId>InteractiveChatDiscordSrvAddon</artifactId>
-  <version>VERSION</version>
-  <scope>provided</scope>
-</dependency>
-```
-Replace `VERSION` with the version number.
 
-## Dependencies 
+The plugin is `common/target/InteractiveChat-Ascension-<version>.jar`.
 
-- [InteractiveChat](https://www.spigotmc.org/resources/75870/)
-- [DiscordSRV](https://www.spigotmc.org/resources/discordsrv.18494/)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how the fork is laid out and how to merge upstream changes.
 
-## Partnerships
+## License and credits
 
-### Server Hosting
-**Use the link or click the banner** below to **get a 25% discount off** your first month when buying any of their gaming servers!<br>
-It also **supports my development**, take it as an alternative way to donate while getting your very own Minecraft server as well!
+GPLv3, like the upstream addon. Copyright LoohpJames and contributors for the upstream code; LOOHP's copyright headers are kept on every file that came from it. If you find this useful, consider [supporting LOOHP](https://github.com/sponsors/LOOHP), who wrote the part that matters.
 
-*P.S. Using the link or clicking the banner rather than the code supports me more! (Costs you no extra!)*
-
-**https://www.bisecthosting.com/loohp**
-
-[![](https://www.bisecthosting.com/partners/custom-banners/96e11ee5-50e4-494f-854d-8c1708813abd.png)](https://www.bisecthosting.com/loohp)
+DiscordSRV Ascension's API (MIT) is used as a compile-time dependency and isn't bundled.

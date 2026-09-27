@@ -115,3 +115,4 @@ run/
 /.ascension/
 .env*
 /.buildtools/
+/.local/

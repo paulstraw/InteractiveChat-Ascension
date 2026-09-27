@@ -61,6 +61,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackSource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
@@ -748,10 +749,38 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 }).get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
+            } catch (Throwable e) {
+                Debug.debug("Resource loading failed: " + e);
+                if (debug) {
+                    e.printStackTrace();
+                }
             } finally {
+                if (!isReady) {
+                    warnResourcesUnavailable(senders);
+                }
                 resourceReloadLock.unlock();
             }
         });
+    }
+
+    /**
+     * The one warning for when Minecraft's assets, or the libraries the renderer needs, couldn't be downloaded or loaded.
+     * Chat still reaches Discord, with placeholders replaced by text, but without images.
+     */
+    private void warnResourcesUnavailable(CommandSender... senders) {
+        sendMessage(ChatColor.RED + "[ICAscension] Couldn't load Minecraft's assets, so Discord messages will be text-only (no item or inventory images). "
+                + "They're downloaded from LOOHP's asset API (api.loohpjames.com) and resources.download.minecraft.net; check the server can reach both, then run /ica reloadtexture."
+                + (debug ? "" : " Set Debug.PrintInfoToConsole to true for details."), senders);
+    }
+
+    /**
+     * Translations for item names in chat text. Falls back to InteractiveChat's languages while resources aren't loaded.
+     */
+    public SpecificTranslateFunction getTranslateFunction() {
+        if (isReady && resourceManager != null) {
+            return resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
+        }
+        return (translationKey, fallback) -> LanguageUtils.getTranslation(translationKey, language).getResultOrFallback(fallback);
     }
 
     public void sendMessage(String message, CommandSender... senders) {
