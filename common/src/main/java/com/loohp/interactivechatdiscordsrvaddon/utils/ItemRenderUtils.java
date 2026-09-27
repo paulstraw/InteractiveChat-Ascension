@@ -226,7 +226,7 @@ public class ItemRenderUtils {
                         }
                     }
                     if (skinImage == null && GameProfileUtils.hasValidUUID(gameProfile)) {
-                        skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(gameProfile.getId())).getTexture();
+                        skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(NMSAddon.getInstance().getGameProfileId(gameProfile))).getTexture();
                     }
                 }
                 providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
@@ -1029,7 +1029,7 @@ public class ItemRenderUtils {
                             }
                         }
                         if (skinImage == null && GameProfileUtils.hasValidUUID(gameProfile)) {
-                            skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(gameProfile.getId())).getTexture();
+                            skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(NMSAddon.getInstance().getGameProfileId(gameProfile))).getTexture();
                         }
                     }
                     providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
@@ -1047,7 +1047,7 @@ public class ItemRenderUtils {
                         }
                     }
                     if (skinImage == null && GameProfileUtils.hasValidUUID(gameProfile)) {
-                        skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(gameProfile.getId())).getTexture();
+                        skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(NMSAddon.getInstance().getGameProfileId(gameProfile))).getTexture();
                     }
                 }
                 providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));

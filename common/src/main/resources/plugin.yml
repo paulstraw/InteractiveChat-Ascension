@@ -1,30 +1,29 @@
-name: InteractiveChatDiscordSrvAddon
-author: loohp
+name: InteractiveChat-Ascension
+author: paulstraw
+authors: [LOOHP]
 version: ${project.version}
 main: com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon
 api-version: 1.13
-folia-supported: true
-description: DiscordSRV addon to InteractiveChat
-depend: [InteractiveChat, DiscordSRV]
-softdepend: [ItemsAdder, ImageFrame, CraftEngine]
-prefix: InteractiveChatDiscordSRVAddon
+folia-supported: false
+description: Unofficial fork of LOOHP's InteractiveChat DiscordSRV Addon for DiscordSRV Ascension. Shows InteractiveChat items, inventories and ender chests in Discord.
+website: https://github.com/paulstraw/InteractiveChat-Ascension
+depend: [InteractiveChat, DiscordSRV-Ascension]
+softdepend: [ItemsAdder, CraftEngine]
+prefix: ICAscension
 
 commands:
-  interactivechatdiscordsrv:
+  interactivechatascension:
     usage: /<command>
-    aliases: [icd]
+    aliases: [ica]
     description: Plugin main command
 
 permissions:
-  interactivechatdiscordsrv.reloadconfig:
+  interactivechatascension.reloadconfig:
     description: Allows you to reload the config
     default: op
-  interactivechatdiscordsrv.reloadtexture:
+  interactivechatascension.reloadtexture:
     description: Allows you to reload the texture
     default: op
-  interactivechatdiscordsrv.status:
+  interactivechatascension.status:
     description: Allows you view the status of the plugin
     default: true
-  interactivechatdiscordsrv.update:
-    description: Get updater notifications
-    default: op

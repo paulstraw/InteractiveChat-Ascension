@@ -20,8 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
-import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.ActionRow;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.components.actionrow.ActionRow;
 
 import java.util.Collection;
 import java.util.List;

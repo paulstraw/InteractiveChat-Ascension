@@ -20,8 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
+import com.discordsrv.api.discord.entity.channel.DiscordGuildMessageChannel;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -29,12 +29,10 @@ import org.bukkit.event.HandlerList;
 import java.util.List;
 
 /**
- * This event is called after the plugin deletes the original message on discord
- * and generates the required images, but before the new discord messages are
- * sent.
+ * This event is called after the plugin generates the required images, but before
+ * DiscordSRV sends the message to the channels of one Discord server.
  * <p>
- * Cancelling this even causes the plugin to resend the oringal message back to
- * discord.
+ * Cancelling this event sends the message without the images.
  *
  * @author LOOHP
  */
@@ -46,16 +44,16 @@ public class DiscordImageEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 
-    private TextChannel channel;
+    private List<DiscordGuildMessageChannel> channels;
     private String originalMessage;
     private String newMessage;
     private List<DiscordMessageContent> discordMessageContents;
     private boolean cancel;
 
-    public DiscordImageEvent(TextChannel channel, String originalMessage, String newMessage,
+    public DiscordImageEvent(List<DiscordGuildMessageChannel> channels, String originalMessage, String newMessage,
                              List<DiscordMessageContent> discordMessageContents, boolean cancel, boolean async) {
         super(async);
-        this.channel = channel;
+        this.channels = channels;
         this.originalMessage = originalMessage;
         this.newMessage = newMessage;
         this.discordMessageContents = discordMessageContents;
@@ -72,8 +70,8 @@ public class DiscordImageEvent extends Event implements Cancellable {
         this.cancel = cancel;
     }
 
-    public TextChannel getChannel() {
-        return channel;
+    public List<DiscordGuildMessageChannel> getChannels() {
+        return channels;
     }
 
     public String getOriginalMessage() {

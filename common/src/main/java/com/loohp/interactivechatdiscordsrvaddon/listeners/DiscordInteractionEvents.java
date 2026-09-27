@@ -26,11 +26,11 @@ import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
-import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.ButtonClickEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SelectionMenuEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
+import com.discordsrv.api.eventbus.Subscribe;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.Message;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -40,13 +40,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DiscordInteractionEvents extends ListenerAdapter {
+public class DiscordInteractionEvents {
 
     public static final String INTERACTION_ID_PREFIX;
 
     static {
         try {
-            String uuid = InteractiveChatDiscordSrvAddon.plugin.metrics.getServerUUID();
+            String uuid = InteractiveChatDiscordSrvAddon.plugin.getServerId();
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();
             }
@@ -59,7 +59,10 @@ public class DiscordInteractionEvents extends ListenerAdapter {
     private static final Map<String, InteractionData> REGISTER = new ConcurrentHashMap<>();
 
     public static void register(Message message, InteractionHandler interactionHandler, List<DiscordMessageContent> discordMessageContent) {
-        String messageId = message.getChannel().getId() + "/" + message.getId();
+        register(message.getChannel().getId() + "/" + message.getId(), interactionHandler, discordMessageContent);
+    }
+
+    public static void register(String messageId, InteractionHandler interactionHandler, List<DiscordMessageContent> discordMessageContent) {
         List<String> interactionIds = interactionHandler.getInteractions();
         InteractionData interactionData = new InteractionData(interactionHandler, discordMessageContent, interactionIds, messageId);
         for (String id : interactionIds) {
@@ -83,18 +86,18 @@ public class DiscordInteractionEvents extends ListenerAdapter {
         REGISTER.clear();
     }
 
-    @Override
-    public void onButtonClick(ButtonClickEvent event) {
+    @Subscribe
+    public void onButtonClick(ButtonInteractionEvent event) {
         handleInteraction(event);
     }
 
-    @Override
-    public void onSelectionMenu(SelectionMenuEvent event) {
+    @Subscribe
+    public void onSelectionMenu(StringSelectInteractionEvent event) {
         handleInteraction(event);
     }
 
     private void handleInteraction(GenericComponentInteractionCreateEvent event) {
-        String id = event.getComponent().getId();
+        String id = event.getComponentId();
         if (!id.startsWith(INTERACTION_ID_PREFIX)) {
             return;
         }

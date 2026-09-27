@@ -21,21 +21,15 @@
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 import com.loohp.interactivechat.objectholders.ValuePairs;
-import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed.Field;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
-import github.scarsz.discordsrv.objects.MessageFormat;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.EmbedBuilder;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.MessageEmbed;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.MessageEmbed.Field;
 
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -83,49 +77,6 @@ public class DiscordMessageContent {
         this(authorName, authorIconUrl, new ArrayList<>(), new ArrayList<>(), color, new HashMap<>());
     }
 
-    public DiscordMessageContent(Message message) {
-        if (message.getEmbeds().isEmpty()) {
-            throw new IllegalArgumentException("Not embeds found!");
-        }
-        MessageEmbed embed = message.getEmbeds().get(0);
-        this.authorName = embed.getAuthor().getName();
-        this.authorIconUrl = embed.getAuthor().getIconUrl();
-        this.description = new ArrayList<>();
-        this.fields = new ArrayList<>(embed.getFields());
-        if (embed.getDescription() != null) {
-            description.add(embed.getDescription());
-        }
-        this.imageUrl = new ArrayList<>();
-        if (embed.getImage() != null) {
-            imageUrl.add(embed.getImage().getUrl());
-        }
-        this.color = embed.getColorRaw();
-        if (embed.getThumbnail() != null) {
-            this.thumbnail = embed.getThumbnail().getUrl();
-        }
-        this.attachments = new HashMap<>();
-    }
-
-    public DiscordMessageContent(MessageFormat messageFormat) {
-        this.authorName = messageFormat.getAuthorName();
-        this.authorIconUrl = messageFormat.getAuthorImageUrl();
-        this.description = new ArrayList<>();
-        if (messageFormat.getDescription() != null) {
-            description.add(messageFormat.getDescription());
-        }
-        if (messageFormat.getFields() == null) {
-            this.fields = new ArrayList<>();
-        } else {
-            this.fields = new ArrayList<>(messageFormat.getFields());
-        }
-        this.imageUrl = new ArrayList<>();
-        if (messageFormat.getImageUrl() != null) {
-            imageUrl.add(messageFormat.getImageUrl());
-        }
-        this.color = messageFormat.getColorRaw();
-        this.thumbnail = messageFormat.getThumbnailUrl();
-        this.attachments = new HashMap<>();
-    }
 
     public String getAuthorName() {
         return authorName;
@@ -245,80 +196,6 @@ public class DiscordMessageContent {
 
     public void clearAttachments() {
         attachments.clear();
-    }
-
-    @SuppressWarnings("deprecation")
-    public RestAction<List<Message>> toJDAMessageRestAction(TextChannel channel) {
-        Map<MessageAction, Set<String>> actions = new LinkedHashMap<>();
-        Set<String> rootAttachments = new HashSet<>();
-        rootAttachments.add(authorIconUrl);
-        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail).setTitle(title);
-        for (Field field : fields) {
-            embed.addField(field);
-        }
-        if (description.size() > 0) {
-            embed.setDescription(description.get(0));
-        }
-        if (imageUrl.size() > 0) {
-            String url = imageUrl.get(0);
-            embed.setImage(url);
-            rootAttachments.add(url);
-        }
-        if (imageUrl.size() == 1 || description.size() == 1) {
-            if (footer != null) {
-                if (footerImageUrl == null) {
-                    embed.setFooter(footer);
-                } else {
-                    embed.setFooter(footer, footerImageUrl);
-                    rootAttachments.add(footerImageUrl);
-                }
-            }
-        }
-        actions.put(channel.sendMessage(embed.build()), rootAttachments);
-        for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
-            Set<String> usedAttachments = new HashSet<>();
-            EmbedBuilder otherEmbed = new EmbedBuilder().setColor(color);
-            if (i < imageUrl.size()) {
-                String url = imageUrl.get(i);
-                otherEmbed.setImage(url);
-                usedAttachments.add(url);
-            }
-            if (i < description.size()) {
-                otherEmbed.setDescription(description.get(i));
-            }
-            if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
-                if (footer != null) {
-                    if (footerImageUrl == null) {
-                        otherEmbed.setFooter(footer);
-                    } else {
-                        otherEmbed.setFooter(footer, footerImageUrl);
-                    }
-                }
-            }
-            if (!otherEmbed.isEmpty()) {
-                actions.put(channel.sendMessage(otherEmbed.build()), usedAttachments);
-            }
-        }
-        Set<String> embeddedAttachments = new HashSet<>();
-        for (Entry<MessageAction, Set<String>> entry : actions.entrySet()) {
-            MessageAction action = entry.getKey();
-            Set<String> neededUrls = entry.getValue();
-            for (Entry<String, byte[]> attachment : attachments.entrySet()) {
-                String attachmentName = attachment.getKey();
-                if (neededUrls.contains("attachment://" + attachmentName)) {
-                    action.addFile(attachment.getValue(), attachmentName);
-                    embeddedAttachments.add(attachmentName);
-                }
-            }
-        }
-        MessageAction lastAction = actions.keySet().stream().skip(actions.size() - 1).findFirst().get();
-        for (Entry<String, byte[]> attachment : attachments.entrySet()) {
-            String attachmentName = attachment.getKey();
-            if (!embeddedAttachments.contains(attachmentName)) {
-                lastAction.addFile(attachment.getValue(), attachmentName);
-            }
-        }
-        return RestAction.allOf(actions.keySet());
     }
 
     public ValuePairs<List<MessageEmbed>, Set<String>> toJDAMessageEmbeds() {

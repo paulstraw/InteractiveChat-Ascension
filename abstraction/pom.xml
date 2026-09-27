@@ -25,21 +25,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.loohp</groupId>
-        <artifactId>InteractiveChatDiscordSrvAddon-Parent</artifactId>
-        <version>2026.1.1.0</version>
+        <groupId>com.paulstraw</groupId>
+        <artifactId>InteractiveChat-Ascension-Parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>InteractiveChatDiscordSrvAddon-Abstraction</artifactId>
+    <artifactId>InteractiveChat-Ascension-Abstraction</artifactId>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 
     <dependencies>
+        <dependency>
+            <!-- Built locally by BuildTools (scripts/install-craftbukkit.sh); brings authlib and friends. -->
+            <groupId>org.bukkit</groupId>
+            <artifactId>craftbukkit</artifactId>
+            <version>26.2-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>BlockModelRenderer</artifactId>
@@ -91,19 +92,13 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.9-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>craftbukkit</artifactId>
-            <version>1.9-R0.1-SNAPSHOT</version>
+            <version>26.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>${project.version}</version>
+            <version>${interactivechat.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

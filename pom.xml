@@ -24,58 +24,58 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.loohp</groupId>
-    <artifactId>InteractiveChatDiscordSrvAddon-Parent</artifactId>
-    <version>2026.1.1.0</version>
+    <groupId>com.paulstraw</groupId>
+    <artifactId>InteractiveChat-Ascension-Parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <interactivechat.version>2026.1.1.0</interactivechat.version>
     </properties>
 
+    <!-- Shared by every module. -->
+    <repositories>
+        <!-- Central and LOOHP's repo first: most artifacts live there, and an unreachable repo early in
+             this list stalls every lookup. LOOHP's repo also mirrors the ItemsAdder API. -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>loohp-repo</id>
+            <url>https://repo.loohpjames.com/repository</url>
+        </repository>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.helpch.at/releases/</url>
+        </repository>
+        <repository>
+            <id>paper-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>CodeMC</id>
+            <url>https://repo.codemc.org/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>momirealms-releases</id>
+            <url>https://repo.momirealms.net/releases/</url>
+        </repository>
+    </repositories>
+
     <modules>
+        <!-- Only the modules this fork builds. The other V* directories are kept, unbuilt, so upstream
+             merges stay clean; see CONTRIBUTING.md. -->
         <module>abstraction</module>
-        <module>V1_8</module>
-        <module>V1_8_3</module>
-        <module>V1_8_4</module>
-        <module>V1_9</module>
-        <module>V1_9_4</module>
-        <module>V1_10</module>
-        <module>V1_11</module>
-        <module>V1_12</module>
-        <module>V1_13</module>
-        <module>V1_13_1</module>
-        <module>V1_14</module>
-        <module>V1_15</module>
-        <module>V1_16</module>
-        <module>V1_16_2</module>
-        <module>V1_16_4</module>
-        <module>V1_17</module>
-        <module>V1_18</module>
-        <module>V1_18_2</module>
-        <module>V1_19</module>
-        <module>V1_19_3</module>
-        <module>V1_19_4</module>
-        <module>V1_20</module>
-        <module>V1_20_2</module>
-        <module>V1_20_3</module>
-        <module>V1_20_5</module>
-        <module>V1_20_6</module>
-        <module>V1_21</module>
-        <module>V1_21_1</module>
-        <module>V1_21_2</module>
-        <module>V1_21_3</module>
-        <module>V1_21_4</module>
-        <module>V1_21_5</module>
-        <module>V1_21_6</module>
-        <module>V1_21_7</module>
-        <module>V1_21_8</module>
-        <module>V1_21_9</module>
-        <module>V1_21_10</module>
-        <module>V1_21_11</module>
-        <module>V26_1</module>
-        <module>V26_1_1</module>
-        <module>V26_1_2</module>
         <module>V26_2</module>
         <module>common</module>
     </modules>

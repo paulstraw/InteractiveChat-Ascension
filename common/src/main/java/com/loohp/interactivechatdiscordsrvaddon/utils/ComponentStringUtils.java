@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.discordsrv.api.component.MinecraftComponent;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.BlockNBTComponent;
@@ -485,12 +486,12 @@ public class ComponentStringUtils {
         return null;
     }
 
-    public static github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component toDiscordSRVComponent(Component component) {
-        return github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(InteractiveChatComponentSerializer.gson().serialize(component));
+    public static MinecraftComponent toDiscordSRVComponent(Component component) {
+        return MinecraftComponent.fromJson(InteractiveChatComponentSerializer.gson().serialize(component));
     }
 
-    public static Component toRegularComponent(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component) {
-        return InteractiveChatComponentSerializer.gson().deserialize(github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(component));
+    public static Component toRegularComponent(MinecraftComponent component) {
+        return InteractiveChatComponentSerializer.gson().deserialize(component.asJson());
     }
 
     public static class CharacterLengthProviderData {

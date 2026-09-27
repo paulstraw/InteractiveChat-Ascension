@@ -110,3 +110,8 @@ buildNumber.properties
 
 # Common working directory
 run/
+
+# Ascension checkout used to build its API (scripts/install-ascension-api.sh)
+/.ascension/
+.env*
+/.buildtools/

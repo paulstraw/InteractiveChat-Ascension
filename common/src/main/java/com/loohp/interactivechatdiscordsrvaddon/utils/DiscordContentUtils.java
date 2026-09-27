@@ -42,7 +42,6 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.hooks.imageframe.ImageFrameHook;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
@@ -58,18 +57,19 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
-import github.scarsz.discordsrv.DiscordSRV;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
-import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.ActionRow;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.Button;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectOption;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectionMenu;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectionMenuInteraction;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.WebhookMessageUpdateAction;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.interactions.ReplyAction;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.components.actionrow.ActionRow;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.components.buttons.Button;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.components.selections.SelectOption;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.Message;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.MessageEmbed;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.User;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.entities.emoji.Emoji;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import com.discordsrv.dependencies.net.dv8tion.jda.api.utils.FileUpload;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -172,7 +172,7 @@ public class DiscordContentUtils {
                                 int j = 0;
                                 for (int u = 0; u < options.size(); u += 25) {
                                     String id = DiscordInteractionEvents.INTERACTION_ID_PREFIX + "inventory_item_" + interactionUuid + "_" + ++j;
-                                    interactionsToRegister.add(ActionRow.of(SelectionMenu.create(id).addOptions(options.subList(u, Math.min(u + 25, options.size()))).build()));
+                                    interactionsToRegister.add(ActionRow.of(StringSelectMenu.create(id).addOptions(options.subList(u, Math.min(u + 25, options.size()))).build()));
                                     interactions.add(id);
                                 }
                                 interactionConsumer = interactionConsumer.andThen(getInventoryHandler(interactionUuid, inv.getInventory(), data.getPlayer()));
@@ -195,13 +195,6 @@ public class DiscordContentUtils {
                                         tooltip = ImageUtils.resizeImage(tooltip, 5);
                                         tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
                                     }
-                                } else if (InteractiveChatDiscordSrvAddon.imageFrameHook && ImageFrameHook.isImageFrameCombinedImageItem(item)) {
-                                    BufferedImage source = ImageFrameHook.getImageFrameCombinedImage(item);
-                                    if (source != null) {
-                                        BufferedImage map = ImageGeneration.getMapImage(source);
-                                        tooltip = ImageUtils.resizeImage(tooltip, 5);
-                                        tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
-                                    }
                                 }
                             }
 
@@ -220,7 +213,7 @@ public class DiscordContentUtils {
                             cachedPageImages[0] = ImageUtils.toArray(pageImages.get(0).get());
                             if (!pageImages.isEmpty()) {
                                 UUID interactionUuid = UUID.randomUUID();
-                                interactionsToRegister.add(ActionRow.of(Button.secondary(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "open_book_" + interactionUuid, BOOK_EMOJI)));
+                                interactionsToRegister.add(ActionRow.of(Button.secondary(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "open_book_" + interactionUuid, Emoji.fromUnicode(BOOK_EMOJI))));
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "open_book_" + interactionUuid);
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid);
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid);
@@ -294,7 +287,7 @@ public class DiscordContentUtils {
                             int j = 0;
                             for (int u = 0; u < options.size(); u += 25) {
                                 String id = DiscordInteractionEvents.INTERACTION_ID_PREFIX + "inventory_item_" + interactionUuid + "_" + ++j;
-                                interactionsToRegister.add(ActionRow.of(SelectionMenu.create(id).addOptions(options.subList(u, Math.min(u + 25, options.size()))).build()));
+                                interactionsToRegister.add(ActionRow.of(StringSelectMenu.create(id).addOptions(options.subList(u, Math.min(u + 25, options.size()))).build()));
                                 interactions.add(id);
                             }
                             interactionConsumer = interactionConsumer.andThen(getInventoryHandler(interactionUuid, inv.getInventory(), data.getPlayer()));
@@ -377,14 +370,14 @@ public class DiscordContentUtils {
         }).toArray(ItemStack[]::new);
         AtomicReference<OfflineICPlayer> offlineICPlayerAtomicRef = new AtomicReference<>(player);
         return (event, discordMessageContents) -> {
-            User self = DiscordSRV.getPlugin().getJda().getSelfUser();
+            User self = event.getJDA().getSelfUser();
             User user = event.getUser();
             if (self.equals(user)) {
                 return;
             }
-            String id = event.getComponent().getId();
-            if (id.startsWith(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "inventory_item_" + interactionUuid + "_") && event.getInteraction() instanceof SelectionMenuInteraction) {
-                int slot = Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0));
+            String id = event.getComponentId();
+            if (id.startsWith(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "inventory_item_" + interactionUuid + "_") && event instanceof StringSelectInteractionEvent) {
+                int slot = Integer.parseInt(((StringSelectInteractionEvent) event).getValues().get(0));
                 if (slot >= 0 && slot < items.length) {
                     event.deferReply().setEphemeral(true).queue();
                     Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
@@ -407,11 +400,12 @@ public class DiscordContentUtils {
                             DiscordMessageContent content = result.getFirst().get(0);
                             InteractionHandler interactionHandler = result.getSecond();
 
-                            WebhookMessageUpdateAction<Message> action = event.getHook().setEphemeral(true).editOriginalEmbeds(content.toJDAMessageEmbeds().getFirst());
+                            List<FileUpload> files = new ArrayList<>();
                             for (Map.Entry<String, byte[]> entry : content.getAttachments().entrySet()) {
-                                action.addFile(entry.getValue(), entry.getKey());
+                                files.add(FileUpload.fromData(entry.getValue(), entry.getKey()));
                             }
-                            action.setActionRows(interactionHandler.getInteractionToRegister()).queue(message -> DiscordInteractionEvents.register(message, interactionHandler, Collections.singletonList(content)));
+                            WebhookMessageEditAction<Message> action = event.getHook().setEphemeral(true).editOriginalEmbeds(content.toJDAMessageEmbeds().getFirst()).setFiles(files);
+                            action.setComponents(interactionHandler.getInteractionToRegister()).queue(message -> DiscordInteractionEvents.register(message, interactionHandler, Collections.singletonList(content)));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -457,12 +451,12 @@ public class DiscordContentUtils {
             return SelectOption.of(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getBookPageIndicator(), InteractiveChatDiscordSrvAddon.plugin.language).getResult(), i, cachedImages.length), asText);
         }).collect(Collectors.toList());
         return (event, discordMessageContents) -> {
-            User self = DiscordSRV.getPlugin().getJda().getSelfUser();
+            User self = event.getJDA().getSelfUser();
             User user = event.getUser();
             if (self.equals(user)) {
                 return;
             }
-            String id = event.getComponent().getId();
+            String id = event.getComponentId();
             Message message = event.getMessage();
 
             if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "open_book_" + interactionUuid)) {
@@ -471,17 +465,17 @@ public class DiscordContentUtils {
                 DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Page.png", color);
                 bookContent.addAttachment("Page.png", cachedImages[0]);
                 ValuePairs<List<MessageEmbed>, Set<String>> pair = bookContent.toJDAMessageEmbeds();
-                ReplyAction action = event.replyEmbeds(pair.getFirst()).setEphemeral(true);
+                ReplyCallbackAction action = event.replyEmbeds(pair.getFirst()).setEphemeral(true);
                 for (String name : pair.getSecond()) {
-                    action = action.addFile(bookContent.getAttachments().get(name), name);
+                    action = action.addFiles(FileUpload.fromData(bookContent.getAttachments().get(name), name));
                 }
-                Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI).asDisabled();
-                Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
+                Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, Emoji.fromUnicode(LEFT_EMOJI)).asDisabled();
+                Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, Emoji.fromUnicode(RIGHT_EMOJI));
                 if (cachedImages.length <= 1) {
                     rightButton = rightButton.asDisabled();
                 }
-                SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList("1")).build();
-                action.addActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue(h -> h.retrieveOriginal().queue(m -> DiscordInteractionEvents.getInteractionData(id).getMessageIds().add(m.getTextChannel().getId() + "/" + m.getId())));
+                StringSelectMenu selectionMenu = StringSelectMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList("1")).build();
+                action.addComponents(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue(h -> h.retrieveOriginal().queue(m -> DiscordInteractionEvents.getInteractionData(id).getMessageIds().add(m.getChannel().getId() + "/" + m.getId())));
                 return;
             }
             event.deferEdit().queue();
@@ -492,8 +486,8 @@ public class DiscordContentUtils {
                 }
                 //noinspection SynchronizationOnLocalVariableOrMethodParameter
                 synchronized (currentPage) {
-                    if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid) && event.getInteraction() instanceof SelectionMenuInteraction) {
-                        int pageNumber = currentPage.updateAndGet(i -> Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0)) - 1);
+                    if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid) && event instanceof StringSelectInteractionEvent) {
+                        int pageNumber = currentPage.updateAndGet(i -> Integer.parseInt(((StringSelectInteractionEvent) event).getValues().get(0)) - 1);
                         byte[] pageFile = cachedImages[pageNumber];
                         if (pageFile == null) {
                             try {
@@ -503,17 +497,17 @@ public class DiscordContentUtils {
                             }
                         }
 
-                        WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
-                        Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
+                        WebhookMessageEditAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).setFiles(FileUpload.fromData(pageFile, "Page.png"));
+                        Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, Emoji.fromUnicode(LEFT_EMOJI));
                         if (currentPage.get() <= 0) {
                             leftButton = leftButton.asDisabled();
                         }
-                        Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
+                        Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, Emoji.fromUnicode(RIGHT_EMOJI));
                         if (currentPage.get() >= cachedImages.length - 1) {
                             rightButton = rightButton.asDisabled();
                         }
-                        SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
-                        action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
+                        StringSelectMenu selectionMenu = StringSelectMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                        action.setComponents(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                     } else if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid)) {
                         if (currentPage.get() > 0) {
                             int pageNumber = currentPage.decrementAndGet();
@@ -526,17 +520,17 @@ public class DiscordContentUtils {
                                 }
                             }
 
-                            WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
-                            Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
+                            WebhookMessageEditAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).setFiles(FileUpload.fromData(pageFile, "Page.png"));
+                            Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, Emoji.fromUnicode(LEFT_EMOJI));
                             if (currentPage.get() <= 0) {
                                 leftButton = leftButton.asDisabled();
                             }
-                            Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
+                            Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, Emoji.fromUnicode(RIGHT_EMOJI));
                             if (currentPage.get() >= cachedImages.length - 1) {
                                 rightButton = rightButton.asDisabled();
                             }
-                            SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
-                            action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
+                            StringSelectMenu selectionMenu = StringSelectMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                            action.setComponents(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                         }
                     } else if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid)) {
                         if (currentPage.get() < cachedImages.length - 1) {
@@ -550,17 +544,17 @@ public class DiscordContentUtils {
                                 }
                             }
 
-                            WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
-                            Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
+                            WebhookMessageEditAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).setFiles(FileUpload.fromData(pageFile, "Page.png"));
+                            Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, Emoji.fromUnicode(LEFT_EMOJI));
                             if (currentPage.get() <= 0) {
                                 leftButton = leftButton.asDisabled();
                             }
-                            Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
+                            Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, Emoji.fromUnicode(RIGHT_EMOJI));
                             if (currentPage.get() >= cachedImages.length - 1) {
                                 rightButton = rightButton.asDisabled();
                             }
-                            SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
-                            action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
+                            StringSelectMenu selectionMenu = StringSelectMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                            action.setComponents(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                         }
                     }
                 }

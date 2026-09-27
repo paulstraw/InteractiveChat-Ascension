@@ -43,16 +43,11 @@ import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.hooks.craftengine.CraftEngineHook;
-import com.loohp.interactivechatdiscordsrvaddon.hooks.imageframe.ImageFrameEvents;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordCommandEvents;
+import com.discordsrv.api.DiscordSRV;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordCommands;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.ICPlayerEvents;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.LegacyDiscordCommandEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
-import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
-import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
@@ -69,13 +64,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontTextureResou
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
-import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
-import github.scarsz.discordsrv.DiscordSRV;
-import github.scarsz.discordsrv.api.ListenerPriority;
-import github.scarsz.discordsrv.dependencies.jda.api.Permission;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.GatewayIntent;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -88,6 +78,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -113,24 +104,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listener {
 
-    public static final int BSTATS_PLUGIN_ID = 8863;
     public static final String CONFIG_ID = "interactivechatdiscordsrvaddon_config";
 
-    public static final List<Permission> requiredPermissions = Collections.unmodifiableList(Arrays.asList(
-        Permission.MESSAGE_READ,
-        Permission.MESSAGE_WRITE,
-        Permission.MESSAGE_MANAGE,
-        Permission.MESSAGE_EMBED_LINKS,
-        Permission.MESSAGE_ATTACH_FILES,
-        Permission.MANAGE_WEBHOOKS
-    ));
 
     public static InteractiveChatDiscordSrvAddon plugin;
     public static InteractiveChat interactivechat;
-    public static DiscordSRV discordsrv;
 
     public static boolean itemsAdderHook = false;
-    public static boolean imageFrameHook = false;
     public static boolean craftEngineHook = false;
 
     public static boolean isReady = false;
@@ -138,7 +118,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public static boolean debug = false;
 
     protected final ReentrantLock resourceReloadLock = new ReentrantLock(true);
-    public Metrics metrics;
     public AtomicLong messagesCounter = new AtomicLong(0);
     public AtomicLong imageCounter = new AtomicLong(0);
     public AtomicLong inventoryImageCounter = new AtomicLong(0);
@@ -146,9 +125,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public AtomicLong attachmentImageCounter = new AtomicLong(0);
     public AtomicLong imagesViewedCounter = new AtomicLong(0);
     public Queue<Integer> playerModelRenderingTimes = new ConcurrentLinkedQueue<>();
-    public ListenerPriority gameToDiscordPriority = ListenerPriority.HIGHEST;
-    public ListenerPriority ventureChatToDiscordPriority = ListenerPriority.HIGHEST;
-    public ListenerPriority discordToGamePriority = ListenerPriority.HIGH;
     public boolean itemImage = true;
     public boolean invImage = true;
     public boolean enderImage = true;
@@ -167,48 +143,20 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean hoverUseTooltipImage = true;
     public String reloadConfigMessage;
     public String reloadTextureMessage;
-    public String linkExpired;
     public String interactionExpire;
-    public String previewLoading;
     public String accountNotLinked;
     public String unableToRetrieveData;
-    public String invalidDiscordChannel;
     public String trueLabel;
     public String falseLabel;
     public String defaultResourceHashLang;
     public String fontsActiveLang;
     public String loadedResourcesLang;
-    public boolean convertDiscordAttachments = true;
-    public String discordAttachmentsFormattingText;
-    public boolean discordAttachmentsFormattingHoverEnabled = true;
-    public String discordAttachmentsFormattingHoverText;
-    public boolean discordAttachmentsImagesUseMaps = true;
-    public long discordAttachmentsPreviewLimit = 0;
-    public int discordAttachmentTimeout = 0;
-    public String discordAttachmentsFormattingImageAppend;
-    public String discordAttachmentsFormattingImageAppendHover;
-    public Color discordAttachmentsMapBackgroundColor = null;
     public boolean imageWhitelistEnabled = false;
     public List<String> whitelistedImageUrls = new ArrayList<>();
-    public boolean translateMentions = true;
-    public boolean suppressDiscordPings = false;
-    public String mentionHighlight = "";
-    public boolean deathMessageItem = true;
-    public boolean deathMessageTranslated = true;
-    public String deathMessageTitle = "";
-    public boolean advancementName = true;
-    public boolean advancementItem = true;
-    public boolean advancementDescription = true;
-    public boolean updaterEnabled = true;
     public int cacheTimeout = 1200;
-    public boolean escapePlaceholdersFromDiscord = true;
     public boolean escapeDiscordMarkdownInItems = true;
     public boolean reducedAssetsDownloadInfo = false;
-    public boolean playbackBarEnabled = true;
-    public Color playbackBarFilledColor;
-    public Color playbackBarEmptyColor;
     public String language = "en_us";
-    public boolean respondToCommandsInInvalidChannels = true;
     public String discordMemberLabel = "";
     public String discordMemberDescription = "";
     public String discordSlotLabel = "";
@@ -281,6 +229,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public int rendererThreads = -1;
 
     private ResourceManager resourceManager;
+    private final List<Object> discordListeners = new ArrayList<>();
+    private DiscordCommands discordCommands;
+    private String serverId;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
 
@@ -298,16 +249,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     }
 
     @Override
-    public void onLoad() {
-        DiscordSRV.api.requireIntent(GatewayIntent.GUILD_MESSAGE_REACTIONS);
-        DiscordSRV.api.subscribe(new DiscordCommandEvents());
-    }
-
-    @Override
     public void onEnable() {
         plugin = this;
         interactivechat = InteractiveChat.plugin;
-        discordsrv = DiscordSRV.getPlugin();
 
         if (!getDataFolder().exists()) {
             getDataFolder().mkdirs();
@@ -324,21 +268,20 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
         reloadConfig();
 
-        metrics = new Metrics(this, BSTATS_PLUGIN_ID);
-        Charts.setup(metrics);
-
-        DiscordSRV.api.subscribe(new DiscordReadyEvents());
-        DiscordSRV.api.subscribe(new LegacyDiscordCommandEvents());
-        DiscordSRV.api.subscribe(new OutboundToDiscordEvents());
-        DiscordSRV.api.subscribe(new InboundToGameEvents());
+        discordListeners.add(new OutboundToDiscordEvents());
+        discordListeners.add(new DiscordInteractionEvents());
+        for (Object listener : discordListeners) {
+            DiscordSRV.get().eventBus().subscribe(listener);
+        }
+        discordCommands = new DiscordCommands();
+        discordCommands.init();
+        discordCommands.register();
 
         getServer().getPluginManager().registerEvents(this, this);
-        getServer().getPluginManager().registerEvents(new InboundToGameEvents(), this);
-        getServer().getPluginManager().registerEvents(new OutboundToDiscordEvents(), this);
+        getServer().getPluginManager().registerEvents(discordCommands, this);
         getServer().getPluginManager().registerEvents(new ICPlayerEvents(), this);
         getServer().getPluginManager().registerEvents(new Debug(), this);
-        getServer().getPluginManager().registerEvents(new Updater(), this);
-        getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
+        getCommand("interactivechatascension").setExecutor(new Commands());
 
         File resourcepacks = new File(getDataFolder(), "resourcepacks");
         if (!resourcepacks.exists()) {
@@ -347,7 +290,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 try {
                     Files.move(resources.toPath(), resourcepacks.toPath(), StandardCopyOption.ATOMIC_MOVE);
                 } catch (IOException e) {
-                    getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to move folder, are any files opened?");
+                    getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] Unable to move folder, are any files opened?");
                     e.printStackTrace();
                     getServer().getPluginManager().disablePlugin(this);
                     return;
@@ -362,29 +305,23 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         if (InteractiveChat.isPluginEnabled("ItemsAdder")) {
-            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ItemsAdder!");
+            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] InteractiveChat-Ascension has hooked into ItemsAdder!");
             itemsAdderHook = true;
         }
 
-        if (InteractiveChat.isPluginEnabled("ImageFrame")) {
-            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ImageFrame!");
-            Bukkit.getPluginManager().registerEvents(new ImageFrameEvents(), this);
-            imageFrameHook = true;
-        }
-
         if (InteractiveChat.isPluginEnabled("CraftEngine")) {
-            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into CraftEngine");
+            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] InteractiveChat-Ascension has hooked into CraftEngine");
             craftEngineHook = true;
         }
 
         if (!compatible()) {
             for (int i = 0; i < 10; i++) {
-                getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INSTALLED INTERACTIVECHAT VERSION, PLEASE UPDATE BOTH TO LATEST!!!!");
+                getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] VERSION NOT COMPATIBLE WITH INSTALLED INTERACTIVECHAT VERSION, PLEASE UPDATE BOTH TO LATEST!!!!");
             }
             getServer().getPluginManager().disablePlugin(this);
             return;
         } else {
-            getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
+            getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICAscension] InteractiveChat-Ascension has been Enabled!");
         }
 
         reloadTextures(false, false);
@@ -395,7 +332,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             return Runtime.getRuntime().availableProcessors() + rendererThreads;
         });
 
-        ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Media Reading Thread #%d").build();
+        ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("InteractiveChat-Ascension Async Media Reading Thread #%d").build();
         mediaReadingService = Executors.newFixedThreadPool(4, factory);
 
         Scheduler.runTaskTimerAsynchronously(this, () -> {
@@ -442,13 +379,22 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
     @Override
     public void onDisable() {
+        if (DiscordSRV.isAvailable()) {
+            for (Object listener : discordListeners) {
+                DiscordSRV.get().eventBus().unsubscribe(listener);
+            }
+        }
+        discordListeners.clear();
+        if (discordCommands != null) {
+            discordCommands.unregister();
+        }
         DiscordInteractionEvents.unregisterAll();
         modelRenderer.close();
         mediaReadingService.shutdown();
         if (resourceManager != null) {
             resourceManager.close();
         }
-        getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
+        getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICAscension] InteractiveChat-Ascension has been Disabled!");
     }
 
     public boolean compatible() {
@@ -467,11 +413,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadConfig"));
         reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadTexture"));
-        linkExpired = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.LinkExpired"));
-        previewLoading = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.PreviewLoading"));
         accountNotLinked = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.AccountNotLinked"));
         unableToRetrieveData = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.UnableToRetrieveData"));
-        invalidDiscordChannel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InvalidDiscordChannel"));
         interactionExpire = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InteractionExpired"));
         trueLabel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.TrueLabel"));
         falseLabel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.FalseLabel"));
@@ -516,62 +459,26 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         hoverUseTooltipImage = config.getConfiguration().getBoolean("HoverEventDisplay.UseTooltipImage");
 
-        convertDiscordAttachments = config.getConfiguration().getBoolean("DiscordAttachments.Convert");
-        discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.Text"));
-        discordAttachmentsFormattingHoverEnabled = config.getConfiguration().getBoolean("DiscordAttachments.Formatting.Hover.Enabled");
-        discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.HoverText")));
-        discordAttachmentsImagesUseMaps = config.getConfiguration().getBoolean("DiscordAttachments.ShowImageUsingMaps");
-        discordAttachmentsPreviewLimit = config.getConfiguration().getLong("DiscordAttachments.FileSizeLimit");
-        discordAttachmentTimeout = config.getConfiguration().getInt("DiscordAttachments.Timeout") * 20;
-        discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.ImageOriginal"));
-        discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover")));
-
-        boolean transparent = config.getConfiguration().getBoolean("DiscordAttachments.ImageMapBackground.Transparent");
-        if (transparent) {
-            discordAttachmentsMapBackgroundColor = null;
-        } else {
-            discordAttachmentsMapBackgroundColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.ImageMapBackground.Color"));
-        }
 
         imageWhitelistEnabled = config.getConfiguration().getBoolean("DiscordAttachments.RestrictImageUrl.Enabled");
         whitelistedImageUrls = config.getConfiguration().getStringList("DiscordAttachments.RestrictImageUrl.Whitelist");
 
-        updaterEnabled = config.getConfiguration().getBoolean("Options.UpdaterEnabled");
 
         cacheTimeout = config.getConfiguration().getInt("Settings.CacheTimeout") * 20;
 
-        escapePlaceholdersFromDiscord = config.getConfiguration().getBoolean("Settings.EscapePlaceholdersSentFromDiscord");
         escapeDiscordMarkdownInItems = config.getConfiguration().getBoolean("Settings.EscapeDiscordMarkdownFormattingInItems");
         reducedAssetsDownloadInfo = config.getConfiguration().getBoolean("Settings.ReducedAssetsDownloadInfo");
 
         embedDeleteAfter = config.getConfiguration().getInt("Settings.EmbedDeleteAfter");
-
-        gameToDiscordPriority = ListenerPriority.valueOf(config.getConfiguration().getString("Settings.ListenerPriorities.GameToDiscord").toUpperCase());
-        ventureChatToDiscordPriority = ListenerPriority.valueOf(config.getConfiguration().getString("Settings.ListenerPriorities.VentureChatToDiscord").toUpperCase());
-        discordToGamePriority = ListenerPriority.valueOf(config.getConfiguration().getString("Settings.ListenerPriorities.DiscordToGame").toUpperCase());
 
         itemDisplaySingle = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Single");
         itemDisplayMultiple = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Multiple");
         invColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("InventoryImage.Inventory.EmbedColor"));
         enderColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("InventoryImage.EnderChest.EmbedColor"));
 
-        deathMessageItem = config.getConfiguration().getBoolean("DeathMessage.ShowItems");
-        deathMessageTranslated = config.getConfiguration().getBoolean("DeathMessage.TranslatedDeathMessage");
-        deathMessageTitle = config.getConfiguration().getString("DeathMessage.Title");
 
-        advancementName = config.getConfiguration().getBoolean("Advancements.CorrectAdvancementName");
-        advancementItem = config.getConfiguration().getBoolean("Advancements.ChangeToItemIcon");
-        advancementDescription = config.getConfiguration().getBoolean("Advancements.ShowDescription");
 
-        translateMentions = config.getConfiguration().getBoolean("DiscordMention.TranslateMentions");
-        suppressDiscordPings = config.getConfiguration().getBoolean("DiscordMention.SuppressDiscordPings");
-        mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordMention.MentionHighlight"));
 
-        playbackBarEnabled = config.getConfiguration().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
-        playbackBarFilledColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.FilledColor"));
-        playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
-
-        respondToCommandsInInvalidChannels = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToCommandsInInvalidChannels");
 
         discordMemberLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberLabel").toLowerCase();
         discordMemberDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberDescription");
@@ -648,7 +555,29 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         FontTextureResource.setCacheTime(cacheTimeout);
 
-        discordsrv.reloadRegexes();
+    }
+
+    /**
+     * A random id kept in the data folder, so interaction ids from this server survive restarts and
+     * don't clash with other servers sharing the bot.
+     */
+    public synchronized String getServerId() {
+        if (serverId == null) {
+            File file = new File(getDataFolder(), "server-id");
+            try {
+                if (file.exists()) {
+                    serverId = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).trim();
+                }
+                if (serverId == null || serverId.isEmpty()) {
+                    serverId = UUID.randomUUID().toString();
+                    Files.write(file.toPath(), serverId.getBytes(StandardCharsets.UTF_8));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                serverId = UUID.randomUUID().toString();
+            }
+        }
+        return serverId;
     }
 
     public byte[] getExtras(String str) {
@@ -695,7 +624,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 File serverResourcePackFolder = new File(getDataFolder(), "server-resource-packs");
                 File serverResourcePack = null;
                 if (includeServerResourcePack) {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Checking for server resource pack...");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICAscension] Checking for server resource pack...");
                     ServerResourcePackDownloadResult result = AssetsDownloader.downloadServerResourcePack(serverResourcePackFolder);
                     serverResourcePack = result.getResourcePackFile();
                     if (result.getError() != null) {
@@ -703,31 +632,31 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     }
                     switch (result.getType()) {
                         case SUCCESS_NO_CHANGES:
-                            sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Server resource pack found with verification hash: No changes", senders);
+                            sendMessage(ChatColor.GREEN + "[ICAscension] Server resource pack found with verification hash: No changes", senders);
                             resourceList.add(serverResourcePack.getName());
                             break;
                         case SUCCESS_WITH_HASH:
-                            sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Server resource pack found with verification hash: Hash changed, downloaded", senders);
+                            sendMessage(ChatColor.GREEN + "[ICAscension] Server resource pack found with verification hash: Hash changed, downloaded", senders);
                             resourceList.add(serverResourcePack.getName());
                             break;
                         case SUCCESS_NO_HASH:
-                            sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Server resource pack found without verification hash: Downloaded", senders);
+                            sendMessage(ChatColor.GREEN + "[ICAscension] Server resource pack found without verification hash: Downloaded", senders);
                             resourceList.add(serverResourcePack.getName());
                             break;
                         case FAILURE_WRONG_HASH:
-                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Server resource pack had wrong hash (expected " + result.getExpectedHash() + ", found " + result.getPackHash() + ")", senders);
-                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Server resource pack will not be applied: Hash check failure", senders);
+                            sendMessage(ChatColor.RED + "[ICAscension] Server resource pack had wrong hash (expected " + result.getExpectedHash() + ", found " + result.getPackHash() + ")", senders);
+                            sendMessage(ChatColor.RED + "[ICAscension] Server resource pack will not be applied: Hash check failure", senders);
                             break;
                         case FAILURE_DOWNLOAD:
-                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Failed to download server resource pack", senders);
+                            sendMessage(ChatColor.RED + "[ICAscension] Failed to download server resource pack", senders);
                             break;
                         case NO_PACK:
-                            Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] No server resource pack found");
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICAscension] No server resource pack found");
                             break;
                     }
                 }
 
-                sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
+                sendMessage(ChatColor.AQUA + "[ICAscension] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 List<ModManagerSupplier<?>> mods = new ArrayList<>();
                 if (chimeOverrideModels) {
@@ -757,7 +686,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 );
 
                 for (Entry<String, ModManager> entry : resourceManager.getModManagers().entrySet()) {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Registered ModManager \"" + entry.getKey() + "\" of class \"" + entry.getValue().getClass().getName() + "\"");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICAscension] Registered ModManager \"" + entry.getKey() + "\" of class \"" + entry.getValue().getClass().getName() + "\"");
                 }
 
                 resourceManager.getFontManager().setDefaultKey(forceUnicode ? FontManager.UNIFORM_FONT : FontManager.DEFAULT_FONT);
@@ -770,22 +699,22 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     }
                 });
 
-                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] Loading \"Default\" resources...");
                 List<ResourcePackSource> sources = new ArrayList<>();
                 sources.add(ResourcePackSource.ofDefault("Default", new File(getDataFolder() + "/built-in", "Default"), ResourcePackType.BUILT_IN));
                 for (String resourceName : resourceOrder) {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] Loading \"" + resourceName + "\" resources...");
                     sources.add(ResourcePackSource.ofCustom(resourceName, new File(getDataFolder(), "resourcepacks/" + resourceName), ResourcePackType.LOCAL));
                 }
                 if (includeServerResourcePack && serverResourcePack != null && serverResourcePack.exists()) {
                     String resourceName = serverResourcePack.getName();
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] Loading \"" + resourceName + "\" resources...");
                     sources.add(ResourcePackSource.ofCustom(resourceName, serverResourcePack, ResourcePackType.SERVER));
                 }
                 if (craftEngineHook) {
                     File cePackFile = CraftEngineHook.getGeneratedResourcePackFile();
                     if (cePackFile != null) {
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"CraftEngine\" resources...");
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICAscension] Loading \"CraftEngine\" resources...");
                         sources.add(ResourcePackSource.ofCustom("CraftEngine", cePackFile, ResourcePackType.SERVER));
                     }
                 }
@@ -793,15 +722,15 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     String resourceName = source.getName();
                     if (info.getStatus()) {
                         if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
-                            sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
+                            sendMessage(ChatColor.YELLOW + "[ICAscension] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
                         } else if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
-                            sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
+                            sendMessage(ChatColor.YELLOW + "[ICAscension] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
                         }
                     } else {
                         if (info.getRejectedReason() == null) {
-                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
+                            sendMessage(ChatColor.RED + "[ICAscension] Unable to load \"" + resourceName + "\"", senders);
                         } else {
-                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\", Reason: " + info.getRejectedReason(), senders);
+                            sendMessage(ChatColor.RED + "[ICAscension] Unable to load \"" + resourceName + "\", Reason: " + info.getRejectedReason(), senders);
                         }
                     }
                 });
@@ -810,10 +739,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
 
                     if (resourceManager.getResourcePackInfo().stream().allMatch(each -> each.getStatus())) {
-                        sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loaded all resources!", senders);
+                        sendMessage(ChatColor.AQUA + "[ICAscension] Loaded all resources!", senders);
                         isReady = true;
                     } else {
-                        sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] There is a problem while loading resources.", senders);
+                        sendMessage(ChatColor.RED + "[ICAscension] There is a problem while loading resources.", senders);
                     }
                     return null;
                 }).get();

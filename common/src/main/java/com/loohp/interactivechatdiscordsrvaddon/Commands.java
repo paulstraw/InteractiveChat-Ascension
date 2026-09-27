@@ -22,7 +22,6 @@ package com.loohp.interactivechatdiscordsrvaddon;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
-import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -30,15 +29,10 @@ import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
-import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
-import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
-import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -50,25 +44,24 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class Commands implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!label.equalsIgnoreCase("interactivechatdiscordsrv") && !label.equalsIgnoreCase("icd")) {
+        if (!cmd.getName().equalsIgnoreCase("interactivechatascension")) {
             return true;
         }
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.AQUA + "InteractiveChat DiscordSRV Addon written by LOOHP!");
-            sender.sendMessage(ChatColor.GOLD + "You are running ICDiscordSRVAddon version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
+            sender.sendMessage(ChatColor.AQUA + "InteractiveChat-Ascension: an unofficial fork of LOOHP's InteractiveChat DiscordSRV Addon, for DiscordSRV Ascension");
+            sender.sendMessage(ChatColor.GOLD + "You are running InteractiveChat-Ascension version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
             return true;
         }
 
         if (args[0].equalsIgnoreCase("status")) {
-            if (sender.hasPermission("interactivechatdiscordsrv.status")) {
+            if (sender.hasPermission("interactivechatascension.status")) {
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash + " (" + InteractiveChat.exactMinecraftVersion + ")"));
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
                 for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo()) {
@@ -111,7 +104,7 @@ public class Commands implements CommandExecutor, TabCompleter {
         }
 
         if (args[0].equalsIgnoreCase("reloadconfig")) {
-            if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
+            if (sender.hasPermission("interactivechatascension.reloadconfig")) {
                 try {
                     if (InteractiveChatDiscordSrvAddon.plugin.resourceReloadLock.tryLock(0, TimeUnit.MILLISECONDS)) {
                         try {
@@ -139,7 +132,7 @@ public class Commands implements CommandExecutor, TabCompleter {
             List<String> argList = Arrays.asList(args);
             boolean clean = argList.contains("--reset");
             boolean redownload = argList.contains("--redownload") || clean;
-            if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
+            if (sender.hasPermission("interactivechatascension.reloadtexture")) {
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadTextureMessage);
                 InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload, clean, sender);
             } else {
@@ -148,106 +141,48 @@ public class Commands implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("update")) {
-            if (sender.hasPermission("interactivechatdiscordsrv.update")) {
-                sender.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon written by LOOHP!");
-                sender.sendMessage(ChatColor.GOLD + "[ICDiscordSrvAddon] You are running ICDiscordSRVAddon version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
-                Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                    UpdaterResponse version = Updater.checkUpdate();
-                    if (version.getResult().equals("latest")) {
-                        if (version.isDevBuildLatest()) {
-                            sender.sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] You are running the latest version!");
-                        } else {
-                            Updater.sendUpdateMessage(sender, version.getResult(), version.getSpigotPluginId(), true);
-                        }
-                    } else {
-                        Updater.sendUpdateMessage(sender, version.getResult(), version.getSpigotPluginId());
-                    }
-                });
-            } else {
-                InteractiveChat.sendMessage(sender, InteractiveChat.noPermissionMessage);
-            }
-            return true;
-        }
-
-        if (args[0].equalsIgnoreCase("imagemap")) {
-            if (args.length > 1 && sender instanceof Player) {
-                try {
-                    DiscordAttachmentData data = InboundToGameEvents.DATA.get(UUID.fromString(args[1]));
-                    if (data != null && (data.isImage() || data.isVideo())) {
-                        GraphicsToPacketMapWrapper imageMap = data.getImageMap();
-                        if (imageMap.futureCancelled()) {
-                            sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
-                        } else if (imageMap.futureCompleted()) {
-                            if (imageMap.getColors() == null || imageMap.getColors().isEmpty()) {
-                                sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
-                            } else {
-                                imageMap.show((Player) sender);
-                            }
-                        } else {
-                            sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.previewLoading);
-                        }
-                    } else {
-                        sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
-                    }
-                } catch (Exception e) {
-                    sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
-                    e.printStackTrace();
-                }
-            }
-            return true;
-        }
-
-        sender.sendMessage(ChatColorUtils.translateAlternateColorCodes('&', Bukkit.spigot().getConfig().getString("messages.unknown-command")));
+        sender.sendMessage(ChatColor.RED + "Unknown subcommand. Try /" + label + " status");
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
         List<String> tab = new LinkedList<>();
-        if (!label.equalsIgnoreCase("interactivechatdiscordsrv") && !label.equalsIgnoreCase("icd")) {
+        if (!cmd.getName().equalsIgnoreCase("interactivechatascension")) {
             return tab;
         }
 
         switch (args.length) {
             case 0:
-                if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
+                if (sender.hasPermission("interactivechatascension.reloadconfig")) {
                     tab.add("reloadconfig");
                 }
-                if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
+                if (sender.hasPermission("interactivechatascension.reloadtexture")) {
                     tab.add("reloadtexture");
                 }
-                if (sender.hasPermission("interactivechatdiscordsrv.update")) {
-                    tab.add("update");
-                }
-                if (sender.hasPermission("interactivechatdiscordsrv.status")) {
+                if (sender.hasPermission("interactivechatascension.status")) {
                     tab.add("status");
                 }
                 return tab;
             case 1:
-                if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
+                if (sender.hasPermission("interactivechatascension.reloadconfig")) {
                     if ("reloadconfig".startsWith(args[0].toLowerCase())) {
                         tab.add("reloadconfig");
                     }
                 }
-                if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
+                if (sender.hasPermission("interactivechatascension.reloadtexture")) {
                     if ("reloadtexture".startsWith(args[0].toLowerCase())) {
                         tab.add("reloadtexture");
                     }
                 }
-                if (sender.hasPermission("interactivechatdiscordsrv.update")) {
-                    if ("update".startsWith(args[0].toLowerCase())) {
-                        tab.add("update");
-                    }
-                }
-                if (sender.hasPermission("interactivechatdiscordsrv.status")) {
+                if (sender.hasPermission("interactivechatascension.status")) {
                     if ("status".startsWith(args[0].toLowerCase())) {
                         tab.add("status");
                     }
                 }
                 return tab;
             case 2:
-                if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
+                if (sender.hasPermission("interactivechatascension.reloadtexture")) {
                     if ("reloadtexture".equals(args[0].toLowerCase())) {
                         if ("--redownload".startsWith(args[1].toLowerCase())) {
                             tab.add("--redownload");

@@ -54,10 +54,6 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
-import github.scarsz.discordsrv.dependencies.kyori.adventure.text.KeybindComponent;
-import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TranslatableComponent;
-import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
-import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializerOptions;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.FireworkEffect;
@@ -665,10 +661,10 @@ public class DiscordItemStackUtils {
                             if (bukkitPlayer != null) {
                                 Key attributeModifierKey = NMSAddon.getInstance().getAttributeModifierKey(attributemodifier);
                                 if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_MODIFIER_ID)) {
-                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                                    amount += bukkitPlayer.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
                                     flag = true;
                                 } else if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_MODIFIER_ID)) {
-                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                                    amount += bukkitPlayer.getAttribute(Attribute.ATTACK_SPEED).getBaseValue();
                                     flag = true;
                                 }
                             }
@@ -717,11 +713,11 @@ public class DiscordItemStackUtils {
 
                             if (bukkitPlayer != null) {
                                 if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
-                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                                    amount += bukkitPlayer.getAttribute(Attribute.ATTACK_DAMAGE).getBaseValue();
                                     amount += NMSAddon.getInstance().getLegacyEnchantmentDamageBonus(item, null);
                                     flag = true;
                                 } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
-                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                                    amount += bukkitPlayer.getAttribute(Attribute.ATTACK_SPEED).getBaseValue();
                                     flag = true;
                                 }
                             }
@@ -814,23 +810,6 @@ public class DiscordItemStackUtils {
         return new DiscordToolTip(prints, !hasCustomName && prints.size() <= 1, NMSAddon.getInstance().shouldHideTooltip(item));
     }
 
-    public static String toDiscordText(List<ToolTipComponent<?>> toolTipComponents, Function<ToolTipComponent<BufferedImage>, Component> imageToolTipHandler, String language, boolean embedLinks) {
-        SpecificTranslateFunction translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
-        DiscordSerializer serializerSpecial = new DiscordSerializer(DiscordSerializerOptions.defaults().withEmbedLinks(embedLinks));
-        Function<?, String> resolver = component -> serializerSpecial.serialize(ComponentStringUtils.toDiscordSRVComponent(ComponentStringUtils.resolve((Component) component, translationFunction)));
-        DiscordSerializer serializerRegular = new DiscordSerializer(new DiscordSerializerOptions(embedLinks, true, (Function<KeybindComponent, String>) resolver, (Function<TranslatableComponent, String>) resolver));
-        return toolTipComponents.stream().map(toolTipComponent -> {
-            if (toolTipComponent.getType().equals(ToolTipType.TEXT)) {
-                Component component = toolTipComponent.getToolTipComponent(ToolTipType.TEXT);
-                if (component != null) {
-                    return serializerRegular.serialize(ComponentStringUtils.toDiscordSRVComponent(component));
-                }
-            } else if (toolTipComponent.getType().equals(ToolTipType.IMAGE)) {
-                return serializerRegular.serialize(ComponentStringUtils.toDiscordSRVComponent(imageToolTipHandler.apply((ToolTipComponent<BufferedImage>) toolTipComponent)));
-            }
-            return "";
-        }).collect(Collectors.joining("\n"));
-    }
 
     public static class DiscordToolTip {
 

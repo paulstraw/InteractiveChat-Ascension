@@ -43,22 +43,6 @@ DiscordItemDetailsAndInteractions:
   #Show what is inside a container when sharing a container to discord
   ShowContainers: true
 
-DeathMessage:
-  #Apply DiscordSRV's death message in %deathmessage% with the localized death message from Minecraft
-  TranslatedDeathMessage: true
-  #Show the weapon inside the death message if there is one
-  ShowItems: true
-  #Title for the show item embed
-  Title: "Item Weapon"
-
-Advancements:
-  #Replace the advancement name from DiscordSRV with the actual display name
-  CorrectAdvancementName: true
-  #Show the icon of the advancement instead of the player head
-  ChangeToItemIcon: true
-  #Show the description of that advancement
-  ShowDescription: true
-
 HoverEventDisplay:
   #Whether to show hover event text
   Enabled: true
@@ -71,26 +55,8 @@ HoverEventDisplay:
   IgnoredPlaceholderKeys: []
 
 DiscordAttachments:
-  #Whether to convert discord attachments from disgusting urls into clickable text in chat
-  Convert: true
-  Formatting:
-    Text: "&e[&b{FileName}&e]"
-    ImageOriginal: " &a(Link)"
-    Hover:
-      Enabled: true
-      HoverText:
-        - "&bClick to Preview"
-      ImageOriginalHover:
-        - "&eOpen Original"
-  #Whether to allow previewing images in game using maps
-  ShowImageUsingMaps: true
-  #What color should the background be when previewing images in game using maps
-  #Note that the color will not be exact as it is limited to the map colors Minecraft offers
-  ImageMapBackground:
-    Transparent: false
-    #Only used when Transparent is false
-    Color: "#36393F"
-  #When enabled, Only websites from the list below is allowed to be shown through in-game maps
+  #Images linked from custom placeholder click events (OPEN_URL) are previewed in Discord.
+  #When enabled, only websites from the list below are previewed
   RestrictImageUrl:
     Enabled: false
     Whitelist:
@@ -105,21 +71,10 @@ DiscordAttachments:
       - "http://media.discordapp.net/"
       - "https://textures.minecraft.net/"
       - "http://textures.minecraft.net/"
-  #If the attachment is larger than the defined size, it won't be downloaded for preview
-  #(In Bytes)
-  FileSizeLimit: 8388608
-  Timeout: 86400
-  PlaybackBar:
-    Enabled: true
-    FilledColor: "#FF0000"
-    EmptyColor: "#938B86"
 
 DiscordCommands:
   #These settings apply to all discord commands below 
   GlobalSettings:
-    #Set this to true ONLY IF you have multiple servers with interactivechatdiscordsrvaddon AND
-    #you use a DIFFERENT channel for each server (i.e. not one shared channel for all servers)
-    RespondToCommandsInInvalidChannels: true
     Messages:
       #Labels must be lowercase
       MemberLabel: "member"
@@ -130,16 +85,15 @@ DiscordCommands:
   PlayerInfo:
     #Enable the /playerinfo command to show player information
     Enabled: true
-    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
-    #If you do, set this option on ONE of the servers connected to the discord channel to true,
-    #With all others servers to false.
+    #Whether this server registers the command with DiscordSRV. If several servers share one bot,
+    #set this to true on only one of them.
     IsMainServer: true
     #The description of this command on discord
     Description: "Show player information on discord!"
     #The player information to display
     InfoFormatting:
       Title: "%player_name%'s Player Info"
-      SubTitle: "%discordsrv_user_tag%"
+      SubTitle: "%discordsrv_user_name%"
       WhenOnline:
         - "%vault_prefix%%player_name%"
         - "&7Status: &aOnline"
@@ -148,11 +102,10 @@ DiscordCommands:
         - "&7Status: &cOffline"
   #Settings for /resourcepack
   ResourcePack:
-    #Enable the /resourcepack command to show installed resource packs on interactivechatdiscordsrvaddon
+    #Enable the /resourcepack command to show installed resource packs on InteractiveChat-Ascension
     Enabled: true
-    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
-    #If you do, set this option on ONE of the servers connected to the discord channel to true,
-    #With all others servers to false.
+    #Whether this server registers the command with DiscordSRV. If several servers share one bot,
+    #set this to true on only one of them.
     IsMainServer: true
     #The description of this command on discord
     Description: "Show applied resource packs on discord!"
@@ -162,9 +115,8 @@ DiscordCommands:
     Enabled: true
     #The description of this command on discord
     Description: "Show all online players!"
-    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
-    #If you do, set this option on ONE of the servers connected to the discord channel to true, 
-    #With all others servers to false.
+    #Whether this server registers the command with DiscordSRV. If several servers share one bot,
+    #set this to true on only one of them.
     IsMainServer: true
     #List other players on the same network if connected to bungeecord
     ListBungeecordPlayers: true
@@ -225,9 +177,8 @@ DiscordCommands:
     Enabled: true
     #Allow the /itemasuser associate command on discord
     AllowAsOthers: true
-    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
-    #If you do, set this option on ONE of the servers connected to the discord channel to true,
-    #With all others servers to false.
+    #Whether this server registers the command with DiscordSRV. If several servers share one bot,
+    #set this to true on only one of them.
     IsMainServer: true
     InGameMessage:
       Text: "&6{Player} shared an Item: &f{ItemTag}"
@@ -238,9 +189,8 @@ DiscordCommands:
     Enabled: true
     #Allow the /invasuser associate command on discord
     AllowAsOthers: true
-    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
-    #If you do, set this option on ONE of the servers connected to the discord channel to true, 
-    #With all others servers to false.
+    #Whether this server registers the command with DiscordSRV. If several servers share one bot,
+    #set this to true on only one of them.
     IsMainServer: true
     InGameMessage:
       Text: "&6{Player} shared their Inventory: &f[&b{Player}'s Inventory&f]"
@@ -254,45 +204,14 @@ DiscordCommands:
     Enabled: true
     #Allow the /enderasuser associate command on discord
     AllowAsOthers: true
-    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
-    #If you do, set this option on ONE of the servers connected to the discord channel to true, 
-    #With all others servers to false.
+    #Whether this server registers the command with DiscordSRV. If several servers share one bot,
+    #set this to true on only one of them.
     IsMainServer: true
     InGameMessage:
       Text: "&6{Player} shared their Ender Chest: &f[&d{Player}'s Ender Chest&f]"
       Hover:
         - "&bClick to view!"
     InventoryTitle: "{Player}'s Ender Chest"
-
-DiscordMention:
-  #Link mentions through discordsrv linked accounts
-  TranslateMentions: true
-
-  #Suppress pings on discord side
-  SuppressDiscordPings: false
-
-  #The sound to play when a player is mentioned
-  #https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
-  MentionedSound: ENTITY_EXPERIENCE_ORB_PICKUP
-
-  #The title to show when mentioned
-  MentionedTitle: "&c&lMentioned"
-
-  #How long should the title be shown when mentioned
-  #Duration in seconds
-  MentionedTitleDuration: 1.5
-
-  #The subtitle and actionbar  to show when mentioned
-  #Note that actionbar might not work if your version of Minecraft does not support it
-  #Use {DiscordUser} for the ping-ers's discord name
-  #Use {TextChannel} for the pinged channel name
-  #Use {Guild} for the pinged guild name
-  DiscordMentionSubtitle: "&9{DiscordUser} &fmentioned you in &9{TextChannel}!"
-  DiscordMentionActionbar: ""
-
-  #Highlight the mentioned playername for the player mentioned
-  #Use {DiscordMention} for the highlighted player name
-  MentionHighlight: "&9{DiscordMention}"
 
 Resources:
   #Which language should be used in places like the item tooltip
@@ -324,13 +243,10 @@ Resources:
   ChimeOverrideModels: false
 
 Messages:
-  ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
-  ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
-  LinkExpired: "&cThis link has been expired! To view this link, please head over to the linked discord channel!"
-  PreviewLoading: "&ePreview is being loaded! Please wait!"
+  ReloadConfig: "&aInteractiveChat-Ascension config has been reloaded!"
+  ReloadTexture: "&aInteractiveChat-Ascension reloading textures--- (See console for progress)"
   AccountNotLinked: "&cA Minecraft account must be linked to this Discord account in order to use this command!"
   UnableToRetrieveData: "&cUnable to retrieve data."
-  InvalidDiscordChannel: "&cYou cannot do that in this channel."
   InteractionExpired: "&cThis interaction had expired."
   TrueLabel: "&aTrue"
   FalseLabel: "&cFalse"
@@ -342,23 +258,11 @@ Messages:
 Settings:
   #This is in seconds
   CacheTimeout: 300
-  EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
   ReducedAssetsDownloadInfo: true
-  #Delete the embed messages sent by InteractiveChatDiscordSRVAddon after X seconds (Set to 0 to not have it automatically deleted)
+  #Delete the embed messages sent by InteractiveChat-Ascension after X seconds (Set to 0 to not have it automatically deleted)
   #This does not include ones that have their own config option, such as /playerlist
   EmbedDeleteAfter: 0
-  #You might want to adjust this option if you have other plugins listening to DiscordSRV's events
-  #And it is interfering with InteractiveChatDiscordSRVAddon's ability to modify and read game or discord messages
-  #Valid options are
-  #LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR
-  ListenerPriorities:
-    #Defaults to HIGHEST
-    GameToDiscord: HIGHEST
-    #Defaults to HIGHEST
-    VentureChatToDiscord: HIGHEST
-    #Defaults to HIGH
-    DiscordToGame: HIGH
   RendererSettings:
     #Threads used to resolve and render block models
     #A positive number sets the absolute number of threads to be used
@@ -368,6 +272,3 @@ Settings:
 
 Debug:
   PrintInfoToConsole: false
-
-Options:
-  Updater: true

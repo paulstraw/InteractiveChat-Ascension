@@ -626,7 +626,7 @@ public class ImageUtils {
                 }
             }
             if (skinImage == null && GameProfileUtils.hasValidUUID(gameProfile)) {
-                skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(gameProfile.getId())).getTexture();
+                skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(NMSAddon.getInstance().getGameProfileId(gameProfile))).getTexture();
             }
         }
         BufferedImage avatar = ImageUtils.copyAndGetSubImage(skinImage, 8, 8, 8, 8);
